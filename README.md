@@ -3,5 +3,5 @@
 Complie with
 
 ```bash
-swiftc -o micwatcher micCheck.swift -framework CoreAudio -framework Foundation
+swiftc -o micwatcher micWatcher.swift -framework CoreAudio -framework Foundation
 ```
