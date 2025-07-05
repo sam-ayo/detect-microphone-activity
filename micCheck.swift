@@ -32,8 +32,6 @@ func micUsageChanged(
     var isRunning = DarwinBoolean(false)
     var dataSize = UInt32(MemoryLayout<UInt32>.size)
     
-    print("🎤 micUsageChanged called with inDeviceID: \(inDeviceID), numberAddresses: \(numberAddresses), addresses: \(addresses)")
-    
     var propertyAddress = AudioObjectPropertyAddress(
         mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
         mScope: kAudioObjectPropertyScopeGlobal,
@@ -83,7 +81,6 @@ func monitorMicrophoneUsage() {
         print("Failed to register mic listener")
     }
     
-    // Keep the runloop alive to continue listening
     RunLoop.current.run()
 }
 
