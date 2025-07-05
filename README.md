@@ -1,6 +1,6 @@
 # Microphone activity detector on macOS
 
-Uses [CoreAudio](https://developer.apple.com/documentation/coreaudio) to detect when the microphone is being used.
+Uses [CoreAudio](https://developer.apple.com/documentation/coreaudio) to detect when microphone is being used.
 
 Pipes `active` and `inactive` to STDOUT depending on whether microphone is being used or not.
 
