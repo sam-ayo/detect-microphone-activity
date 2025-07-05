@@ -7,6 +7,9 @@ setbuf(stdout, nil)
 let MIC_ACTIVE = "active"
 let MIC_INACTIVE = "inactive"
 
+let ERROR_MESSAGE = "Failed to read mic usage"
+let DEFAULT_DEVICE_ERROR_MESSAGE = "Could not get default input device"
+
 func getDefaultInputDeviceID() -> AudioDeviceID? {
     var defaultDeviceID = AudioDeviceID()
     var propertyAddress = AudioObjectPropertyAddress(
@@ -56,15 +59,37 @@ func micUsageChanged(
     if status == noErr {
         print(isRunning.boolValue ? MIC_ACTIVE : MIC_INACTIVE)
     } else {
-        print("Failed to read mic usage")
+        print(ERROR_MESSAGE)
     }
 
     return noErr
 }
 
+func checkFirstTimeMicUsage(
+    deviceID: AudioObjectID, propertyAddress: UnsafePointer<AudioObjectPropertyAddress>
+) {
+    var isRunning = DarwinBoolean(false)
+    var dataSize = UInt32(MemoryLayout<UInt32>.size)
+
+    let status = AudioObjectGetPropertyData(
+        deviceID,
+        propertyAddress,
+        0,
+        nil,
+        &dataSize,
+        &isRunning
+    )
+
+    if status == noErr {
+        print(isRunning.boolValue ? MIC_ACTIVE : MIC_INACTIVE)
+    } else {
+        print(ERROR_MESSAGE)
+    }
+}
+
 func monitorMicrophoneUsage() {
     guard let deviceID = getDefaultInputDeviceID() else {
-        print("Could not get default input device")
+        print(DEFAULT_DEVICE_ERROR_MESSAGE)
         return
     }
 
@@ -81,8 +106,10 @@ func monitorMicrophoneUsage() {
         nil
     )
 
+    checkFirstTimeMicUsage(deviceID: deviceID, propertyAddress: &propertyAddress)
+
     if status != noErr {
-        fputs("Failed to register mic listener\n", stderr)
+        print(ERROR_MESSAGE)
     }
 
     RunLoop.current.run()
