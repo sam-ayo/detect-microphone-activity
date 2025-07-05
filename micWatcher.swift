@@ -1,5 +1,11 @@
-import Foundation
 import CoreAudio
+import Darwin
+import Foundation
+
+setbuf(stdout, nil)
+
+let MIC_ACTIVE = "active"
+let MIC_INACTIVE = "inactive"
 
 func getDefaultInputDeviceID() -> AudioDeviceID? {
     var defaultDeviceID = AudioDeviceID()
@@ -8,7 +14,7 @@ func getDefaultInputDeviceID() -> AudioDeviceID? {
         mScope: kAudioObjectPropertyScopeGlobal,
         mElement: kAudioObjectPropertyElementMain
     )
-    
+
     var dataSize = UInt32(MemoryLayout<AudioDeviceID>.size)
     let status = AudioObjectGetPropertyData(
         AudioObjectID(kAudioObjectSystemObject),
@@ -18,7 +24,7 @@ func getDefaultInputDeviceID() -> AudioDeviceID? {
         &dataSize,
         &defaultDeviceID
     )
-    
+
     return (status == noErr) ? defaultDeviceID : nil
 }
 
@@ -28,16 +34,16 @@ func micUsageChanged(
     addresses: UnsafePointer<AudioObjectPropertyAddress>,
     clientData: UnsafeMutableRawPointer?
 ) -> OSStatus {
-    
+
     var isRunning = DarwinBoolean(false)
     var dataSize = UInt32(MemoryLayout<UInt32>.size)
-    
+
     var propertyAddress = AudioObjectPropertyAddress(
         mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
         mScope: kAudioObjectPropertyScopeGlobal,
         mElement: kAudioObjectPropertyElementMain
     )
-    
+
     let status = AudioObjectGetPropertyData(
         inDeviceID,
         &propertyAddress,
@@ -46,13 +52,13 @@ func micUsageChanged(
         &dataSize,
         &isRunning
     )
-    
+
     if status == noErr {
-        print("Microphone is \(isRunning.boolValue ? "ACTIVE" : "INACTIVE")")
+        print(isRunning.boolValue ? MIC_ACTIVE : MIC_INACTIVE)
     } else {
         print("Failed to read mic usage")
     }
-    
+
     return noErr
 }
 
@@ -61,26 +67,24 @@ func monitorMicrophoneUsage() {
         print("Could not get default input device")
         return
     }
-    
+
     var propertyAddress = AudioObjectPropertyAddress(
         mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
         mScope: kAudioObjectPropertyScopeGlobal,
         mElement: kAudioObjectPropertyElementMain
     )
-    
+
     let status = AudioObjectAddPropertyListener(
         deviceID,
         &propertyAddress,
         micUsageChanged,
         nil
     )
-    
-    if status == noErr {
-        print("Listening for mic usage on device ID: \(deviceID)")
-    } else {
-        print("Failed to register mic listener")
+
+    if status != noErr {
+        fputs("Failed to register mic listener\n", stderr)
     }
-    
+
     RunLoop.current.run()
 }
 
